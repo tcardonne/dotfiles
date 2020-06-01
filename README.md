@@ -22,3 +22,9 @@ curl -s -L -o powerlevel10k-master.tar.gz https://github.com/romkatv/powerlevel1
 
 rm -f oh-my-zsh-master.tar.gz zsh-autosuggestions-master.tar.gz powerlevel10k-master.tar.gz
 ```
+
+# Update
+```
+git remote rm origin
+git remote add origin git@github.com:tcardonne/dotfiles.git
+```
