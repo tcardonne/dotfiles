@@ -6,6 +6,7 @@ fonts/
 # Ignore when windows
 {{- if eq .chezmoi.os "windows" }}
 .ssh/
+.oh-my-zsh/
 .bash_aliases
 .zshrc
 .p10k.zsh
@@ -14,9 +15,11 @@ fonts/
 # Ignore when not windows
 {{- if ne .chezmoi.os "windows" }}
 .config/windows_terminal/
-{{- end }}
 
 # Ignore on WSL
 {{- if .chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$" }}
 wallpapers/
 {{- end }}
+
+{{- end }}
+
