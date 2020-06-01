@@ -9,6 +9,7 @@ chsh -s $(which zsh)
 # Install Golang
 curl -s -L -o golang.tar.gz https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf golang.tar.gz
+rm -f golang.tar.gz
 
 {{- end }}
 
