@@ -1,0 +1,23 @@
+{{- if eq .chezmoi.os "windows" }}
+
+REM Personal applications
+{{- if eq .install_type "perso" }}
+choco install -y ^
+    telegram.install ^
+    dropbox ^
+    restic
+{{- end }}
+
+REM Development applications
+choco install -y ^
+    microsoft-windows-terminal ^
+    docker-desktop ^
+    docker-compose ^
+    inconsolata ^
+    winrar ^
+    postman ^
+    vscode
+
+code --install-extension Shan.code-settings-sync
+
+{{- end }}

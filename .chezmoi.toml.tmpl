@@ -1,0 +1,7 @@
+{{- $email := promptString "email" -}}
+{{- $install_type := promptString "Install type (pro | perso)" -}}
+
+[data]
+    install_type = "{{ $install_type }}"
+    email = "{{ $email }}"
+    name = "Thomas Cardonne"

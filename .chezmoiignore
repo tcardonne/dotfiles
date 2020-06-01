@@ -1,0 +1,15 @@
+legacy/
+README.md
+
+fonts/
+
+# Windows ignore
+{{- if eq .chezmoi.os "windows" }}
+.ssh/
+.bash_aliases
+{{- end }}
+
+# Windows keep
+{{- if ne .chezmoi.os "windows" }}
+dot_config/windows_terminal/
+{{- end }}
