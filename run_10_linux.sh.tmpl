@@ -1,0 +1,10 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+set -e
+
+# Install Golang
+curl -s -L -o golang.tar.gz https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf golang.tar.gz
+
+{{- end }}
+

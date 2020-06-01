@@ -3,13 +3,20 @@ README.md
 
 fonts/
 
-# Windows ignore
+# Ignore when windows
 {{- if eq .chezmoi.os "windows" }}
 .ssh/
 .bash_aliases
+.zshrc
+.p10k.zsh
 {{- end }}
 
-# Windows keep
+# Ignore when not windows
 {{- if ne .chezmoi.os "windows" }}
-dot_config/windows_terminal/
+.config/windows_terminal/
+{{- end }}
+
+# Ignore on WSL
+{{- if .chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$" }}
+wallpapers/
 {{- end }}
