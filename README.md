@@ -1,15 +1,47 @@
 # dotfiles
 
-# Install Chocolatey
+My dotfiles, managed by [chezmoi](https://github.com/twpayne/chezmoi).
+
+I mainly use Windows with Ubuntu on WSL.
+
+## Windows Setup
+
+```powershell
+# Install chocolatey
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco install -y git.install chezmoi
 
+# Run chezmoi
+chezmoi.exe init https://github.com/tcardonne/dotfiles.git
+chezmoi.exe apply
+
+cd .local/share/chezmoi
+git remote set-url origin git@github.com:tcardonne/dotfiles.git
+```
+
+## WSL Setup
+
+Install WSL manually (for now).
+
+```bash
+# Install lastpass-cli
+apt update && apt install lastpass-cli
+
+# Login with lastpass
+lpass login {email}
+
+# Install chezmoi
 curl -sfL https://git.io/chezmoi | sh
 
-# Lastpass CLI
+# Run chezmoi
+chezmoi init https://github.com/tcardonne/dotfiles.git
+chezmoi apply
 
+cd $(chezmoi source-path)
+git remote set-url origin git@github.com:tcardonne/dotfiles.git
+```
 
-# Update chezmoi imports
+## Update chezmoi imports
 ```bash
 curl -s -L -o oh-my-zsh-master.tar.gz https://github.com/robbyrussell/oh-my-zsh/archive/master.tar.gz
 ~/bin/chezmoi import --strip-components 1 --destination ${HOME}/.oh-my-zsh oh-my-zsh-master.tar.gz
@@ -24,10 +56,4 @@ curl -s -L -o zsh-syntax-highlighting-master.tar.gz https://github.com/zsh-users
 ~/bin/chezmoi import --strip-components 1 --destination ${HOME}/.oh-my-zsh/custom/themes/zsh-syntax-highlighting zsh-syntax-highlighting-master.tar.gz
 
 rm -f oh-my-zsh-master.tar.gz zsh-autosuggestions-master.tar.gz powerlevel10k-master.tar.gz zsh-syntax-highlighting-master.tar.gz
-```
-
-# Update
-```
-git remote rm origin
-git remote add origin git@github.com:tcardonne/dotfiles.git
 ```
