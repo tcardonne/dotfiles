@@ -13,7 +13,7 @@
     "wordDelimiters": " ./\\()\"'-:,.;<>~!@#$%^&*|+=[]{}~?\u2502",
     "profiles": {
         "defaults": {
-            "colorScheme": "One Half Dark",
+            "colorScheme": "Nord",
             "fontFace": "MesloLGS NF",
             "fontSize": 9,
             "closeOnExit": true,
@@ -96,6 +96,27 @@
         ]
     },
     "schemes": [
+        {
+            "background": "#2E3440",
+            "black": "#3B4252",
+            "blue": "#81A1C1",
+            "cyan": "#88C0D0",
+            "foreground": "#D8DEE9",
+            "green": "#A3BE8C",
+            "brightBlack": "#4C566A",
+            "brightBlue": "#81A1C1",
+            "brightCyan": "#8FBCBB",
+            "brightGreen": "#A3BE8C",
+            "brightPurple": "#B48EAD",
+            "brightRed": "#BF616A",
+            "brightWhite": "#ECEFF4",
+            "brightYellow": "#EBCB8B",
+            "name": "Nord",
+            "purple": "#B48EAD",
+            "red": "#BF616A",
+            "white": "#E5E9F0",
+            "yellow": "#EBCB8B"
+        },
         {
             "background": "#0C0C0C",
             "black": "#0C0C0C",
