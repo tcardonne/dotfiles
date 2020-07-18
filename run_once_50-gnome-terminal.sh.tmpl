@@ -1,0 +1,9 @@
+{{- if and (eq .chezmoi.os "linux") (not (.chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$")) -}}
+#!/bin/bash
+set -e
+
+git clone https://github.com/arcticicestudio/nord-gnome-terminal.git
+./nord-gnome-terminal/src/nord.sh --profile "Nord"
+rm -rf ./nord-gnome-terminal
+
+{{- end -}}

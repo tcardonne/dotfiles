@@ -1,0 +1,88 @@
+{{- if and (eq .chezmoi.os "linux") (not (.chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$")) -}}
+#!/bin/bash
+set -e
+
+dconf load / <<EOF
+
+[org/gnome/desktop/background]
+color-shading-type='solid'
+picture-options='zoom'
+picture-uri='file://{{ .chezmoi.homedir }}/wallpapers/lake.png'
+primary-color='#000000'
+secondary-color='#000000'
+
+[org/gnome/desktop/interface]
+clock-show-date=true
+clock-show-seconds=false
+clock-show-weekday=false
+cursor-theme='Yaru'
+enable-animations=true
+enable-hot-corners=false
+gtk-im-module='gtk-im-context-simple'
+gtk-theme='Arc-Dark'
+icon-theme='Papirus'
+show-battery-percentage=false
+text-scaling-factor=1.0
+
+[org/gnome/desktop/wm/preferences]
+button-layout=':minimize,maximize,close'
+titlebar-font='Ubuntu Light 11'
+
+[org/gnome/shell]
+app-picker-view=uint32 1
+disable-user-extensions=false
+enabled-extensions=['dash-to-panel@jderose9.github.com', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'sound-output-device-chooser@kgshank.net']
+favorite-apps=['org.gnome.Nautilus.desktop', 'google-chrome.desktop', 'org.gnome.Terminal.desktop']
+
+[org/gnome/mutter]
+workspaces-only-on-primary=false
+
+[org/gnome/shell/extensions/dash-to-panel]
+appicon-margin=4
+appicon-padding=4
+dot-position='BOTTOM'
+dot-style-focused='METRO'
+dot-style-unfocused='DOTS'
+group-apps=true
+hotkeys-overlay-combo='TEMPORARILY'
+isolate-monitors=false
+isolate-workspaces=false
+location-clock='STATUSLEFT'
+panel-position='TOP'
+panel-size=26
+scroll-panel-action='SWITCH_WORKSPACE'
+show-appmenu=false
+show-clock-all-monitors=true
+show-favorites-all-monitors=true
+show-showdesktop-button=true
+show-status-menu-all-monitors=true
+stockgs-keep-dash=false
+taskbar-position='LEFTPANEL'
+trans-panel-opacity=0.59999999999999998
+trans-use-custom-bg=false
+trans-use-custom-opacity=true
+trans-use-dynamic-opacity=true
+
+[org/gnome/shell/extensions/user-theme]
+name='Arc'
+
+[org/gnome/shell/extensions/sound-output-device-chooser]
+show-input-slider=false
+hide-menu-icons=false
+
+[org/gtk/settings/file-chooser]
+show-hidden=true
+
+[org/gnome/terminal/legacy/profiles:/:c7a13e46-886c-4f9d-882c-a11a77c13e1f]
+visible-name='Nord'
+font='MesloLGS NF 10'
+use-system-font=false
+
+[org/gnome/terminal/legacy/profiles:]
+default='c7a13e46-886c-4f9d-882c-a11a77c13e1f'
+list=['c7a13e46-886c-4f9d-882c-a11a77c13e1f']
+
+EOF
+
+{{- end -}}
+

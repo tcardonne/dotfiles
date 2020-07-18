@@ -1,0 +1,57 @@
+{{- if and (eq .chezmoi.os "linux") (not (.chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$")) -}}
+#!/bin/bash
+set -e
+
+# Theme & Icons
+sudo add-apt-repository -y ppa:papirus/papirus
+sudo apt-get update
+sudo apt-get install -y \
+    gnome-tweaks \
+    gnome-shell-extensions \
+    arc-theme \
+    papirus-icon-theme
+
+# Dash-To-Panel
+mkdir -p ~/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com
+wget -q https://github.com/home-sweet-gnome/dash-to-panel/releases/download/v38/dash-to-panel@jderose9.github.com_v38.zip  
+unzip -o -d ~/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/ dash-to-panel@jderose9.github.com_v38.zip 
+rm -f dash-to-panel@jderose9.github.com_v38.zip
+
+# Sound Output Device Chooser
+mkdir -p ~/.local/share/gnome-shell/extensions/sound-output-device-chooser@kgshank.net
+wget -q https://extensions.gnome.org/extension-data/sound-output-device-chooserkgshank.net.v31.shell-extension.zip  
+unzip -o -d ~/.local/share/gnome-shell/extensions/sound-output-device-chooser@kgshank.net/ sound-output-device-chooserkgshank.net.v31.shell-extension.zip
+rm -f sound-output-device-chooserkgshank.net.v31.shell-extension.zip  
+
+## google-chrome-stable repository
+sudo sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+sudo apt update && sudo apt install google-chrome-stable
+
+## VSCode (code)
+curl -s https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/
+rm -f packages.microsoft.gpg
+sudo sh -c 'echo "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+
+## Install
+sudo apt update
+sudo apt install -y \
+    google-chrome-stable \
+    code \
+    telegram-desktop
+
+# Zerotier
+curl -s https://install.zerotier.com | sudo bash
+
+# Post-Install
+code --install-extension Shan.code-settings-sync
+
+# Clear font cache
+fc-cache -f -v
+
+# Snaps
+sudo snap install postman
+
+{{- end -}}
+

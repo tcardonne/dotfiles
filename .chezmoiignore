@@ -1,8 +1,6 @@
 legacy/
 README.md
 
-fonts/
-
 # Ignore when windows
 {{- if eq .chezmoi.os "windows" }}
 .ssh/
@@ -10,6 +8,7 @@ fonts/
 .bash_aliases
 .zshrc
 .p10k.zsh
+.fonts/
 {{- end }}
 
 # Ignore when not windows
@@ -19,6 +18,7 @@ fonts/
 # Ignore on WSL
 {{- if .chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$" }}
 wallpapers/
+.fonts/
 {{- end }}
 
 {{- end }}
