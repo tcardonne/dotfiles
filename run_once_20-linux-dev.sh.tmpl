@@ -5,10 +5,10 @@ set -e
 GO_VERSION=1.14.3
 TERRAFORM_VERSION=0.12.28
 
-mkdir ~/Projects
+mkdir -p ~/Projects
 
 # Install ZSH
-sudo apt install -y zsh
+sudo apt install -y zsh neofetch
 sudo chsh -s $(which zsh) $(whoami)
 
 # Install Golang
