@@ -17,7 +17,7 @@
 
   # Unset all configuration options. This allows you to apply configuration changes without
   # restarting zsh. Edit ~/.p10k.zsh and type `source ~/.p10k.zsh`.
-  unset -m 'POWERLEVEL9K_*|DEFAULT_USER'
+  unset -m '(POWERLEVEL9K_*|DEFAULT_USER)~POWERLEVEL9K_GITSTATUS_DIR'
 
   # Zsh >= 5.1 is required.
   autoload -Uz is-at-least && is-at-least 5.1 || return
@@ -247,6 +247,11 @@
   # /foo/bar/git_repo/nested_git_repo/baz, prompt will display git_repo/nested_git_repo/baz (first)
   # or nested_git_repo/baz (last). This assumes that git_repo and nested_git_repo contain markers
   # and other directories don't.
+  #
+  # Optionally, "first" and "last" can be followed by ":<offset>" where <offset> is an integer.
+  # This moves the truncation point to the right (positive offset) or to the left (negative offset)
+  # relative to the marker. Plain "first" and "last" are equivalent to "first:0" and "last:0"
+  # respectively.
   typeset -g POWERLEVEL9K_DIR_TRUNCATE_BEFORE_MARKER=false
   # Don't shorten this many last directory segments. They are anchors.
   typeset -g POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
@@ -501,7 +506,7 @@
   # Execution time color.
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=0
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_BACKGROUND=3
-  # Show duration of the last command if takes longer than this many seconds.
+  # Show duration of the last command if takes at least this many seconds.
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_THRESHOLD=3
   # Show this many fractional digits. Zero means round to seconds.
   typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_PRECISION=0
@@ -530,6 +535,8 @@
 
   ###############[ asdf: asdf version manager (https://github.com/asdf-vm/asdf) ]###############
   # Default asdf color. Only used to display tools for which there is no color override (see below).
+  # Tip:  Override these parameters for ${TOOL} with POWERLEVEL9K_ASDF_${TOOL}_FOREGROUND and
+  # POWERLEVEL9K_ASDF_${TOOL}_BACKGROUND.
   typeset -g POWERLEVEL9K_ASDF_FOREGROUND=0
   typeset -g POWERLEVEL9K_ASDF_BACKGROUND=7
 
@@ -677,6 +684,12 @@
   typeset -g POWERLEVEL9K_ASDF_HASKELL_BACKGROUND=3
   # typeset -g POWERLEVEL9K_ASDF_HASKELL_VISUAL_IDENTIFIER_EXPANSION='⭐'
   # typeset -g POWERLEVEL9K_ASDF_HASKELL_SHOW_ON_UPGLOB='*.foo|*.bar'
+
+  # Julia version from asdf.
+  typeset -g POWERLEVEL9K_ASDF_JULIA_FOREGROUND=0
+  typeset -g POWERLEVEL9K_ASDF_JULIA_BACKGROUND=2
+  # typeset -g POWERLEVEL9K_ASDF_JULIA_VISUAL_IDENTIFIER_EXPANSION='⭐'
+  # typeset -g POWERLEVEL9K_ASDF_JULIA_SHOW_ON_UPGLOB='*.foo|*.bar'
 
   ##########[ nordvpn: nordvpn connection status, linux only (https://nordvpn.com/) ]###########
   # NordVPN connection indicator color.
@@ -915,8 +928,9 @@
   # Note: '({default_env}) ' is the default value of env_prompt.
   #
   # The default value of POWERLEVEL9K_ANACONDA_CONTENT_EXPANSION expands to $CONDA_PROMPT_MODIFIER
-  # without the leading '(' or the trailing ') '.
-  typeset -g POWERLEVEL9K_ANACONDA_CONTENT_EXPANSION='${${${CONDA_PROMPT_MODIFIER#\(}% }%\)}'
+  # without the surrounding parentheses, or to the last path component of CONDA_PREFIX if the former
+  # is empty.
+  typeset -g POWERLEVEL9K_ANACONDA_CONTENT_EXPANSION='${${${${CONDA_PROMPT_MODIFIER#\(}% }%\)}:-${CONDA_PREFIX:t}}'
 
   # Custom icon.
   # typeset -g POWERLEVEL9K_ANACONDA_VISUAL_IDENTIFIER_EXPANSION='⭐'
@@ -1177,6 +1191,8 @@
   # typeset -g POWERLEVEL9K_HASKELL_STACK_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
   ################[ terraform: terraform workspace (https://www.terraform.io) ]#################
+  # Don't show terraform workspace if it's literally "default".
+  typeset -g POWERLEVEL9K_TERRAFORM_SHOW_DEFAULT=false
   # POWERLEVEL9K_TERRAFORM_CLASSES is an array with even number of elements. The first element
   # in each pair defines a pattern against which the current terraform workspace gets matched.
   # More specifically, it's P9K_CONTENT prior to the application of context expansion (see below)
@@ -1190,7 +1206,7 @@
   #   typeset -g POWERLEVEL9K_TERRAFORM_CLASSES=(
   #     '*prod*'  PROD
   #     '*test*'  TEST
-  #     '*'       DEFAULT)
+  #     '*'       OTHER)
   #
   # If your current terraform workspace is "project_test", its class is TEST because "project_test"
   # doesn't match the pattern '*prod*' but does match '*test*'.
@@ -1198,15 +1214,16 @@
   # You can define different colors, icons and content expansions for different classes:
   #
   #   typeset -g POWERLEVEL9K_TERRAFORM_TEST_FOREGROUND=2
+  #   typeset -g POWERLEVEL9K_TERRAFORM_TEST_BACKGROUND=0
   #   typeset -g POWERLEVEL9K_TERRAFORM_TEST_VISUAL_IDENTIFIER_EXPANSION='⭐'
   #   typeset -g POWERLEVEL9K_TERRAFORM_TEST_CONTENT_EXPANSION='> ${P9K_CONTENT} <'
   typeset -g POWERLEVEL9K_TERRAFORM_CLASSES=(
       # '*prod*'  PROD    # These values are examples that are unlikely
       # '*test*'  TEST    # to match your needs. Customize them as needed.
-      '*'       DEFAULT)
-  typeset -g POWERLEVEL9K_TERRAFORM_DEFAULT_FOREGROUND=4
-  typeset -g POWERLEVEL9K_TERRAFORM_DEFAULT_BACKGROUND=0
-  # typeset -g POWERLEVEL9K_TERRAFORM_DEFAULT_VISUAL_IDENTIFIER_EXPANSION='⭐'
+      '*'         OTHER)
+  typeset -g POWERLEVEL9K_TERRAFORM_OTHER_FOREGROUND=4
+  typeset -g POWERLEVEL9K_TERRAFORM_OTHER_BACKGROUND=0
+  # typeset -g POWERLEVEL9K_TERRAFORM_OTHER_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
   #############[ kubecontext: current kubernetes context (https://kubernetes.io/) ]#############
   # Show kubecontext only when the the command you are typing invokes one of these tools.

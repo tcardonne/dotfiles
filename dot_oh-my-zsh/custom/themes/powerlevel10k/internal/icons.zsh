@@ -1,6 +1,7 @@
 typeset -gA icons
 
 function _p9k_init_icons() {
+  [[ -n ${POWERLEVEL9K_MODE-} || ${langinfo[CODESET]} == (utf|UTF)(-|)8 ]] || local POWERLEVEL9K_MODE=ascii
   [[ $_p9k__icon_mode == $POWERLEVEL9K_MODE/$POWERLEVEL9K_LEGACY_ICON_SPACING/$POWERLEVEL9K_ICON_PADDING ]] && return
   typeset -g _p9k__icon_mode=$POWERLEVEL9K_MODE/$POWERLEVEL9K_LEGACY_ICON_SPACING/$POWERLEVEL9K_ICON_PADDING
 
@@ -140,6 +141,7 @@ function _p9k_init_icons() {
         PHP_ICON                       'php'
         HASKELL_ICON                   'hs'
         PACKAGE_ICON                   'pkg'
+        JULIA_ICON                     'jl'
       )
     ;;
     'awesome-fontconfig')
@@ -265,6 +267,7 @@ function _p9k_init_icons() {
         PHP_ICON                       'php'
         HASKELL_ICON                   'hs'
         PACKAGE_ICON                   'pkg'
+        JULIA_ICON                     'jl'
       )
     ;;
     'awesome-mapped-fontconfig')
@@ -393,6 +396,7 @@ function _p9k_init_icons() {
         PHP_ICON                       'php'
         HASKELL_ICON                   'hs'
         PACKAGE_ICON                   'pkg'
+        JULIA_ICON                     'jl'
       )
     ;;
     'nerdfont-complete'|'nerdfont-fontconfig')
@@ -455,7 +459,7 @@ function _p9k_init_icons() {
         HOME_SUB_ICON                  '\uF07C'$s             # 
         FOLDER_ICON                    '\uF115'$s             # 
         ETC_ICON                       '\uF013'$s             # 
-        NETWORK_ICON                   '\uFBF1'$s             # ﯱ
+        NETWORK_ICON                   '\uF50D'$s             # 
         LOAD_ICON                      '\uF080 '              # 
         SWAP_ICON                      '\uF464'$s             # 
         RAM_ICON                       '\uF0E4'$s             # 
@@ -519,6 +523,7 @@ function _p9k_init_icons() {
         PHP_ICON                       '\uE608'               # 
         HASKELL_ICON                   '\uE61F'               # 
         PACKAGE_ICON                   '\uF8D6'               # 
+        JULIA_ICON                     '\uE624'               # 
       )
     ;;
     ascii)
@@ -642,6 +647,7 @@ function _p9k_init_icons() {
         PHP_ICON                       'php'
         HASKELL_ICON                   'hs'
         PACKAGE_ICON                   'pkg'
+        JULIA_ICON                     'jl'
       )
     ;;
     *)
@@ -767,6 +773,7 @@ function _p9k_init_icons() {
         PHP_ICON                       'php'
         HASKELL_ICON                   'hs'
         PACKAGE_ICON                   'pkg'
+        JULIA_ICON                     'jl'
       )
     ;;
   esac

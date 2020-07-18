@@ -76,7 +76,7 @@ function gitstatus_start() {
     [[ -n "$log_level" || "${GITSTATUS_ENABLE_LOGGING:-0}" != 1 ]] || log_level=INFO
 
     local uname_sm
-    uname_sm="$(uname -sm)" || return
+    uname_sm="$(command uname -sm)" || return
     uname_sm="${uname_sm,,}"
     local uname_s="${uname_sm% *}"
     local uname_m="${uname_sm#* }"
@@ -86,8 +86,8 @@ function gitstatus_start() {
     else
       local cpus
       if ! command -v sysctl &>/dev/null || [[ "$uname_s" == linux ]] ||
-         ! cpus="$(sysctl -n hw.ncpu)"; then
-        if ! command -v getconf &>/dev/null || ! cpus="$(getconf _NPROCESSORS_ONLN)"; then
+         ! cpus="$(command sysctl -n hw.ncpu)"; then
+        if ! command -v getconf &>/dev/null || ! cpus="$(command getconf _NPROCESSORS_ONLN)"; then
           cpus=8
         fi
       fi
@@ -104,7 +104,7 @@ function gitstatus_start() {
       --dirty-max-index-size="$max_dirty"
       $extra_flags)
 
-    tmpdir="$(mktemp -d "${TMPDIR:-/tmp}"/gitstatus.bash.$$.XXXXXXXXXX)" || return
+    tmpdir="$(command mktemp -d "${TMPDIR:-/tmp}"/gitstatus.bash.$$.XXXXXXXXXX)" || return
 
     if [[ -n "$log_level" ]]; then
       GITSTATUS_DAEMON_LOG="$tmpdir"/daemon.log
@@ -115,7 +115,7 @@ function gitstatus_start() {
 
     req_fifo="$tmpdir"/req.fifo
     resp_fifo="$tmpdir"/resp.fifo
-    mkfifo -- "$req_fifo" "$resp_fifo" || return
+    command mkfifo -- "$req_fifo" "$resp_fifo" || return
 
     {
       (
@@ -146,8 +146,18 @@ function gitstatus_start() {
 
           local sig=(TERM ILL PIPE)
 
+          if (( UID == EUID )); then
+            local home=~
+          else
+            local user
+            user="$(command id -un)"            || return
+            [[ "$user" =~ ^[a-zA-Z0-9_,.-]+$ ]] || return
+            eval "local home=~$user"
+            [[ -n "$home" ]]                    || return
+          fi
+
           if [[ -x "$_gitstatus_bash_daemon" ]]; then
-            "$_gitstatus_bash_daemon" \
+            HOME="$home" "$_gitstatus_bash_daemon" \
               -G "$_gitstatus_bash_version" "${daemon_args[@]}" <&"$fd_in" >&"$fd_out" &
             local pid=$!
             trap "trap - ${sig[*]}; kill $pid &>/dev/null" ${sig[@]}
@@ -164,6 +174,9 @@ function gitstatus_start() {
 
           (( ! _gitstatus_bash_downloaded ))         || return
           [[ "${GITSTATUS_AUTO_INSTALL:-1}" -ne 0 ]] || return
+          [[ "$_gitstatus_bash_daemon" == \
+             "${GITSTATUS_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/gitstatus}"/* ]] || return
+
           set -- -f "$@"
           _gitstatus_bash_daemon=
           _gitstatus_bash_version=
@@ -173,7 +186,7 @@ function gitstatus_start() {
           [[ -n "$_gitstatus_bash_version" ]]      || return
           [[ "$_gitstatus_bash_downloaded" == 1 ]] || return
 
-          "$_gitstatus_bash_daemon" \
+          HOME="$home" "$_gitstatus_bash_daemon" \
             -G "$_gitstatus_bash_version" "${daemon_args[@]}" <&"$fd_in" >&"$fd_out" &
           local pid=$!
           trap "trap - ${sig[*]}; kill $pid &>/dev/null" ${sig[@]}

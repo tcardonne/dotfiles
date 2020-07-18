@@ -2,7 +2,7 @@
 
 My dotfiles, managed by [chezmoi](https://github.com/twpayne/chezmoi).
 
-I mainly use Windows with Ubuntu on WSL, but I'm migrating towards Ubuntu.
+I mainly use Windows with Ubuntu on WSL, but I'm currently migrating towards Ubuntu.
 
 ## Windows Setup
 
@@ -19,7 +19,7 @@ cd .local/share/chezmoi
 git remote set-url origin git@github.com:tcardonne/dotfiles.git
 ```
 
-## Ubuntu
+## Ubuntu Setup
 
 ```bash
 # Install lastpass-cli
@@ -48,17 +48,6 @@ After install, restart session or press `Alt` + `F2` and type `r` to reload newl
 
 ## Update chezmoi imports
 ```bash
-curl -s -L -o oh-my-zsh-master.tar.gz https://github.com/robbyrussell/oh-my-zsh/archive/master.tar.gz
-~/bin/chezmoi import --strip-components 1 --destination ${HOME}/.oh-my-zsh oh-my-zsh-master.tar.gz
-
-curl -s -L -o zsh-autosuggestions-master.tar.gz https://github.com/zsh-users/zsh-autosuggestions/archive/master.tar.gz
-~/bin/chezmoi import --strip-components 1 --destination ${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions zsh-autosuggestions-master.tar.gz
-
-curl -s -L -o powerlevel10k-master.tar.gz https://github.com/romkatv/powerlevel10k/archive/master.tar.gz
-~/bin/chezmoi import --strip-components 1 --destination ${HOME}/.oh-my-zsh/custom/themes/powerlevel10k powerlevel10k-master.tar.gz
-
-curl -s -L -o zsh-syntax-highlighting-master.tar.gz https://github.com/zsh-users/zsh-syntax-highlighting/archive/master.tar.gz
-~/bin/chezmoi import --strip-components 1 --destination ${HOME}/.oh-my-zsh/custom/themes/zsh-syntax-highlighting zsh-syntax-highlighting-master.tar.gz
-
-rm -f oh-my-zsh-master.tar.gz zsh-autosuggestions-master.tar.gz powerlevel10k-master.tar.gz zsh-syntax-highlighting-master.tar.gz
+cd $(chezmoi source-path)
+./update-imports.sh
 ```

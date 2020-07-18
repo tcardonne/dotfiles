@@ -1,5 +1,5 @@
-legacy/
 README.md
+update-imports.sh
 
 # Ignore when windows
 {{- if eq .chezmoi.os "windows" }}

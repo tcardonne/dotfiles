@@ -519,23 +519,24 @@ function install_font() {
       local size=$iterm2_font_size
       [[ $size == 12 ]] && size=13
       local k t v settings=(
-        '"Normal Font"'            string '"MesloLGS-NF-Regular '$size'"'
-        '"Terminal Type"'          string '"xterm-256color"'
-        '"Horizontal Spacing"'     real   1
-        '"Vertical Spacing"'       real   1
-        '"Minimum Contrast"'       real   0
-        '"Use Bold Font"'          bool   1
-        '"Use Bright Bold"'        bool   1
-        '"Use Italic Font"'        bool   1
-        '"ASCII Anti Aliased"'     bool   1
-        '"Non-ASCII Anti Aliased"' bool   1
-        '"Use Non-ASCII Font"'     bool   0
-        '"Ambiguous Double Width"' bool   0
-        '"Draw Powerline Glyphs"'  bool   1
+        '"Normal Font"'                                 string '"MesloLGS-NF-Regular '$size'"'
+        '"Terminal Type"'                               string '"xterm-256color"'
+        '"Horizontal Spacing"'                          real   1
+        '"Vertical Spacing"'                            real   1
+        '"Minimum Contrast"'                            real   0
+        '"Use Bold Font"'                               bool   1
+        '"Use Bright Bold"'                             bool   1
+        '"Use Italic Font"'                             bool   1
+        '"ASCII Anti Aliased"'                          bool   1
+        '"Non-ASCII Anti Aliased"'                      bool   1
+        '"Use Non-ASCII Font"'                          bool   0
+        '"Ambiguous Double Width"'                      bool   0
+        '"Draw Powerline Glyphs"'                       bool   1
+        '"Only The Default BG Color Uses Transparency"' bool   1
       )
       for k t v in $settings; do
         /usr/libexec/PlistBuddy -c "Set :\"New Bookmarks\":0:$k $v" \
-          ~/Library/Preferences/com.googlecode.iterm2.plist && continue
+          ~/Library/Preferences/com.googlecode.iterm2.plist 2>/dev/null && continue
         run_command "" /usr/libexec/PlistBuddy -c \
           "Add :\"New Bookmarks\":0:$k $t $v" ~/Library/Preferences/com.googlecode.iterm2.plist
       done
