@@ -4,6 +4,15 @@ set -e
 
 dconf load / <<EOF
 
+[org/gnome/desktop/session]
+idle-delay=uint32 0
+
+[org/gnome/desktop/screensaver]
+lock-enabled=false
+
+[org/gnome/desktop/media-handling]
+autorun-never=true
+
 [org/gnome/desktop/background]
 color-shading-type='solid'
 picture-options='zoom'
@@ -69,6 +78,10 @@ name='Arc'
 [org/gnome/shell/extensions/sound-output-device-chooser]
 show-input-slider=false
 hide-menu-icons=false
+
+[org/gnome/shell/extensions/desktop-icons]
+show-home=false
+show-trash=false
 
 [org/gtk/settings/file-chooser]
 show-hidden=true
