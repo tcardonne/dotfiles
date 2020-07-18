@@ -12,7 +12,7 @@ sudo tar -C /usr/local -xzf golang.tar.gz
 rm -f golang.tar.gz
 
 # Install Docker (but not on WSL)
-{{ if not (.chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$") }}
+{{ if not .is_wsl }}
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository \
 "deb [arch=amd64] https://download.docker.com/linux/ubuntu \

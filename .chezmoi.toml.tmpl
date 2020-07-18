@@ -5,3 +5,4 @@
     install_type = "{{ $install_type }}"
     email = "{{ $email }}"
     name = "Thomas Cardonne"
+    is_wsl = {{ (.chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$") }}
