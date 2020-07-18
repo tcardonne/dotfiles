@@ -2,12 +2,15 @@
 #!/bin/bash
 set -e
 
+GO_VERSION=1.14.3
+TERRAFORM_VERSION=0.12.28
+
 # Install ZSH
 sudo apt install -y zsh
 sudo chsh -s $(which zsh) $(whoami)
 
 # Install Golang
-curl -s -L -o golang.tar.gz https://dl.google.com/go/go1.14.3.linux-amd64.tar.gz
+curl -s -L -o golang.tar.gz https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf golang.tar.gz
 rm -f golang.tar.gz
 
@@ -25,6 +28,20 @@ sudo usermod -aG docker $USER
 sudo curl -sL "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 {{ end }}
+
+# Terraform
+wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+sudo unzip -o -d /usr/local/bin terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+
+# Ansible
+sudo apt install -y ansible
+
+# AWS CLI
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -o awscliv2.zip
+sudo ./aws/install --update
+rm -rf aws/ awscliv2.zip
 
 {{- end }}
 
