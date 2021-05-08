@@ -2,8 +2,7 @@
 #!/bin/bash
 set -e
 
-GO_VERSION=1.14.3
-TERRAFORM_VERSION=0.12.28
+GO_VERSION=1.16.4
 
 mkdir -p ~/Projects
 
@@ -31,10 +30,11 @@ sudo curl -sL "https://github.com/docker/compose/releases/download/1.26.2/docker
 sudo chmod +x /usr/local/bin/docker-compose
 {{ end }}
 
-# Terraform
-wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-sudo unzip -o -d /usr/local/bin terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+# Terraform tfenv
+if ! command -v tfenv &> /dev/null; then
+    git clone https://github.com/tfutils/tfenv.git ~/.tfenv
+    sudo ln -s ~/.tfenv/bin/* /usr/local/bin
+fi
 
 # Ansible
 sudo apt install -y ansible
