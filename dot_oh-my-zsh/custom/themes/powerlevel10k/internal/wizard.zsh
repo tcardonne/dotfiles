@@ -23,6 +23,9 @@ else
   function restore_screen() {}
 fi
 
+local -i in_z4h_wizard=0
+[[ $force == 0 && $+functions[z4h] == 1 && -n $Z4H && -e $Z4H/welcome ]] && in_z4h_wizard=1
+
 local -i success=0
 
 {  # always
@@ -107,20 +110,19 @@ local -ra rainbow_right=(
 )
 
 function prompt_length() {
-  local COLUMNS=1024
+  local -i COLUMNS=1024
   local -i x y=$#1 m
   if (( y )); then
     while (( ${${(%):-$1%$y(l.1.0)}[-1]} )); do
       x=y
-      (( y *= 2 ));
+      (( y *= 2 ))
     done
-    local xy
     while (( y > x + 1 )); do
-      m=$(( x + (y - x) / 2 ))
-      typeset ${${(%):-$1%$m(l.x.y)}[-1]}=$m
+      (( m = x + (y - x) / 2 ))
+      (( ${${(%):-$1%$m(l.x.y)}[-1]} = m ))
     done
   fi
-  REPLY=$x
+  typeset -g REPLY=$x
 }
 
 function print_prompt() {
@@ -277,10 +279,13 @@ function quit() {
     print -P ""
   fi
   function quit() {}
+  stty echo 2>/dev/null
+  show_cursor
   exit 1
 }
 
 local screen_widgets=()
+local -i max_priority
 local -i prompt_idx
 local choice
 
@@ -289,6 +294,7 @@ function add_widget() {
   shift
   local render="${(j: :)${(@q)*}}"
   screen_widgets+=("$priority" "$render")
+  (( priority <= max_priority )) || max_priority=priority
 }
 
 function render_screen_pass() {
@@ -327,7 +333,7 @@ function render_screen() {
         else
           break
         fi
-        while (( (COLUMNS > 88 ? 88 : COLUMNS) == wizard_columns && LINES == wizard_lines )); do
+        while (( get_columns() == wizard_columns && LINES == wizard_lines )); do
           sleep 1
         done
       done
@@ -356,7 +362,7 @@ function render_screen() {
       flowing -c %1FNot enough vertical space.%f
       print
       flowing Make terminal window %Btaller%b or press %BCtrl-C%b to abort Powerlevel10k configuration wizard.
-      while (( (COLUMNS > 88 ? 88 : COLUMNS) == wizard_columns && LINES == wizard_lines )); do
+      while (( get_columns() == wizard_columns && LINES == wizard_lines )); do
         sleep 1
       done
     done
@@ -389,6 +395,7 @@ function ask() {
   local -i lines columns wizard_lines wizard_columns
   add_widget 0 print -P "(q)  Quit and do nothing."
   add_widget 0 print
+  add_widget $((max_priority + 1))
   add_widget 0 print -P "%BChoice [${choices}q]: %b"
   while true; do
     =true
@@ -399,11 +406,13 @@ function ask() {
     fi
     typeset -g choice=
     if read -t1 -k choice; then
+      choice=${(L)choice}
       if [[ $choice == q ]]; then
         quit
       fi
       if [[ $choices == *$choice* ]]; then
         screen_widgets=()
+        max_priority=0
         prompt_idx=0
         return
       fi
@@ -415,7 +424,11 @@ local -i greeting_printed=0
 
 function print_greeting() {
   (( greeting_printed )) && return
-  if (( force )); then
+  if (( in_z4h_wizard )); then
+    flowing -c %3FZsh for Humans%f uses %4FPowerlevel10k%f to print command        \
+               line prompt. This wizard will ask you a few questions and configure \
+               prompt for you.
+  elif (( force )); then
     flowing -c This is %4FPowerlevel10k configuration wizard%f. \
                It will ask you a few questions and configure your prompt.
   else
@@ -501,19 +514,19 @@ function install_font() {
   clear
   case $terminal in
     Termux)
-      mkdir -p ~/.termux || quit -c
+      command mkdir -p -- ~/.termux || quit -c
       run_command "Downloading %BMesloLGS NF Regular.ttf%b" \
         curl -fsSL -o ~/.termux/font.ttf "$font_base_url/MesloLGS%20NF%20Regular.ttf"
       run_command "Reloading %BTermux%b settings" termux-reload-settings
     ;;
     iTerm2)
-      mkdir -p ~/Library/Fonts || quit -c
+      command mkdir -p -- ~/Library/Fonts || quit -c
       local style
       for style in Regular Bold Italic 'Bold Italic'; do
         local file="MesloLGS NF ${style}.ttf"
         run_command "Downloading %B$file%b" \
           curl -fsSL -o ~/Library/Fonts/$file.tmp "$font_base_url/${file// /%20}"
-        zf_mv -f -- ~/Library/Fonts/$file{.tmp,} || quit -c
+        command mv -f -- ~/Library/Fonts/$file{.tmp,} || quit -c
       done
       print -nP -- "Changing %BiTerm2%b settings ..."
       local size=$iterm2_font_size
@@ -546,28 +559,31 @@ function install_font() {
       sleep 3
       print -P " %2FOK%f"
       sleep 1
-      restore_screen
+      clear
+      hide_cursor
       print
       flowing +c "%2FMeslo Nerd Font%f" successfully installed.
       print -P ""
-      flowing +c Please "%Brestart iTerm2%b" for the changes to take effect.
-      print -P ""
-      while true; do
+      () {
+        local out
+        out=$(/usr/bin/defaults read 'Apple Global Domain' NSQuitAlwaysKeepsWindows 2>/dev/null) || return
+        [[ $out == 1 ]] || return
+        out="$(iterm_get OpenNoWindowsAtStartup 2>/dev/null)" || return
+        [[ $out == false ]]
+      }
+      if (( $? )); then
+        flowing +c Please "%Brestart iTerm2%b" for the changes to take effect.
+        print -P ""
         flowing +c -i 5 "  1. Click" "%BiTerm2 → Quit iTerm2%b" or press "%B⌘ Q%b."
         flowing +c -i 5 "  2. Open %BiTerm2%b."
         print -P ""
-        local key=
-        read -k key${(%):-"?%BWill you restart iTerm2 before proceeding? [yN]: %b"} || quit -c
-        if [[ $key = (y|Y) ]]; then
-          print -P ""
-          print -P ""
-          exit 69
-        fi
-        print -P ""
-        print -P ""
-        flowing +c "It's" important to "%Brestart iTerm2%b" for the changes to take effect.
-        print -P ""
-      done
+        flowing +c "It's" important to "%Brestart iTerm2%b" by following the instructions above.   \
+                   "It's" "%Bnot enough%b" to close iTerm2 by clicking on the red circle. You must \
+                   click "%BiTerm2 → Quit iTerm2%b" or press "%B⌘ Q%b."
+      else
+        flowing +c Please "%Brestart your computer%b" for the changes to take effect.
+      fi
+      while true; do sleep 60 2>/dev/null; done
     ;;
   esac
 
@@ -666,13 +682,13 @@ function ask_diamond() {
   add_widget 0 print
   add_widget 0 flowing -c -- "--->  \uE0B2\uE0B0  <---"
   add_widget 0 print
-  add_widget 1
+  add_widget 3
   add_widget 0 print -P "%B(y)  Yes.%b"
   add_widget 0 print
   add_widget 1
   add_widget 0 print -P "%B(n)  No.%b"
   add_widget 0 print
-  add_widget 1
+  add_widget 2
   if (( can_install_font )); then
     extra+=r
     add_widget 0 print -P "(r)  Restart from the beginning."
@@ -694,10 +710,13 @@ function ask_lock() {
   add_widget 0 print
   add_widget 0 flowing -c -- "--->  $1  <---"
   add_widget 0 print
+  add_widget 3
   add_widget 0 print -P "%B(y)  Yes.%b"
   add_widget 0 print
+  add_widget 1
   add_widget 0 print -P "%B(n)  No.%b"
   add_widget 0 print
+  add_widget 2
   add_widget 0 print -P "(r)  Restart from the beginning."
   ask ynr
   case $choice in
@@ -714,10 +733,13 @@ function ask_python() {
   add_widget 0 print -P ""
   add_widget 0 flowing -c -- "--->  \uE63C  <---"
   add_widget 0 print -P ""
+  add_widget 3
   add_widget 0 print -P "%B(y)  Yes.%b"
   add_widget 0 print -P ""
+  add_widget 1
   add_widget 0 print -P "%B(n)  No.%b"
   add_widget 0 print -P ""
+  add_widget 2
   add_widget 0 print -P "(r)  Restart from the beginning."
   ask ynr
   case $choice in
@@ -733,10 +755,13 @@ function ask_arrow() {
   add_widget 0 print -P ""
   add_widget 0 flowing -c -- "--->  \u276F\u276E  <---"
   add_widget 0 print -P ""
+  add_widget 3
   add_widget 0 print -P "%B(y)  Yes.%b"
   add_widget 0 print -P ""
+  add_widget 1
   add_widget 0 print -P "%B(n)  No.%b"
   add_widget 0 print -P ""
+  add_widget 2
   add_widget 0 print -P "(r)  Restart from the beginning."
   ask ynr
   case $choice in
@@ -753,10 +778,13 @@ function ask_debian() {
   add_widget 0 print -P ""
   add_widget 0 flowing -c -- "--->  \uF306  <---"
   add_widget 0 print -P ""
+  add_widget 3
   add_widget 0 print -P "%B(y)  Yes.%b"
   add_widget 0 print -P ""
+  add_widget 1
   add_widget 0 print -P "%B(n)  No.%b"
   add_widget 0 print -P ""
+  add_widget 2
   add_widget 0 print -P "(r)  Restart from the beginning."
   ask ynr
   case $choice in
@@ -787,10 +815,13 @@ function ask_icon_padding() {
   add_widget 0 print -P ""
   add_widget 0 flowing -c -- "--->  $text  <---"
   add_widget 0 print -P ""
+  add_widget 3
   add_widget 0 flowing +c -i 5 "%B(y)  Yes." Icons are very close to the crosses but there is "%b%2Fno overlap%f%B.%b"
   add_widget 0 print -P ""
+  add_widget 1
   add_widget 0 flowing +c -i 5 "%B(n)  No." Some icons "%b%2Foverlap%f%B" neighbouring crosses.%b
   add_widget 0 print -P ""
+  add_widget 2
   add_widget 0 print -P "(r)  Restart from the beginning."
   ask ynr
   case $choice in
@@ -959,7 +990,7 @@ function ask_color() {
     r) return 1;;
     [1-4]) color=$choice;;
   esac
-  options+=${(L)color_name[color]}
+  options+=${${(L)color_name[color]}//ı/i}
   return 0
 }
 
@@ -986,7 +1017,7 @@ function ask_ornaments_color() {
     r) return 1;;
     [1-4]) color=$choice;;
   esac
-  options+=${(L)color_name[color]}-ornaments
+  options+=${${(L)color_name[color]}//ı/i}-ornaments
   return 0
 }
 
@@ -1039,7 +1070,7 @@ function os_icon_name() {
     case $uname in
       SunOS)                     echo SUNOS_ICON;;
       Darwin)                    echo APPLE_ICON;;
-      CYGWIN_NT-* | MSYS_NT-*)   echo WINDOWS_ICON;;
+      CYGWIN_NT-*|MSYS_NT-*|MINGW64_NT-*|MINGW32_NT-*)   echo WINDOWS_ICON;;
       FreeBSD|OpenBSD|DragonFly) echo FREEBSD_ICON;;
       Linux)
         local os_release_id
@@ -1047,6 +1078,8 @@ function os_icon_name() {
           local lines=(${(f)"$(</etc/os-release)"})
           lines=(${(@M)lines:#ID=*})
           (( $#lines == 1 )) && os_release_id=${lines[1]#ID=}
+        elif [[ -e /etc/artix-release ]]; then
+          os_release_id=artix
         fi
         case $os_release_id in
           *arch*)                  echo LINUX_ARCH_ICON;;
@@ -1069,6 +1102,7 @@ function os_icon_name() {
           *devuan*)                echo LINUX_DEVUAN_ICON;;
           *manjaro*)               echo LINUX_MANJARO_ICON;;
           *void*)                  echo LINUX_VOID_ICON;;
+          *artix*)                 echo LINUX_ARTIX_ICON;;
           *)                       echo LINUX_ICON;;
         esac
         ;;
@@ -1389,16 +1423,16 @@ function ask_empty_line() {
   add_widget 0 print -P "%B(1)  Compact.%b"
   add_widget 0 print
   add_widget 1
-  add_widget 0 print_prompt
-  add_widget 0 print_prompt
+  add_prompt_n
+  add_prompt_n
   add_widget 0 print
   add_widget 2
   add_widget 0 print -P "%B(2)  Sparse.%b"
   add_widget 0 print
   add_widget 1
-  add_widget 0 print_prompt
+  add_prompt_n
   add_widget 0 print
-  add_widget 0 print_prompt
+  add_prompt_n
   add_widget 0 print
   add_widget 2
   add_widget 0 print -P "(r)  Restart from the beginning."
@@ -1421,34 +1455,37 @@ function print_instant_prompt_link() {
 function ask_instant_prompt() {
   if ! is-at-least 5.4; then
     instant_prompt=off
+    options+=instant_prompt=auto-off
     return 0
+  fi
+  if (( $+functions[z4h] )); then
+    instant_prompt=quiet
+    options+=instant_prompt=auto-quiet
+    return
   fi
   add_widget 0 flowing -c "%BInstant Prompt Mode%b"
   add_widget 0 print_instant_prompt_link
   add_widget 1
   add_widget 0 print
   add_widget 2
-  add_widget 0 flowing +c -i 5 "%B(1)  Off.%b" Disable instant prompt. Choose this if you\'ve \
-    tried instant prompt and found it incompatible with your zsh configuration files.
+  add_widget 0 flowing +c -i 5 "%B(1)  Verbose (recommended).%b"
   add_widget 0 print
   add_widget 1
-  add_widget 0 flowing +c -i 5 "%B(2)  Quiet.%b" Enable instant prompt and %Bdon\'t print      \
-    warnings%b when detecting console output during zsh initialization. Choose this if you\'ve \
-    read and understood instant prompt documentation.
+  add_widget 0 flowing +c -i 5 "%B(2)  Quiet.%b" Choose this if you\'ve read and understood \
+    instant prompt documentation.
   add_widget 0 print
   add_widget 1
-  add_widget 0 flowing +c -i 5 "%B(3)  Verbose.%b"  Enable instant prompt and %Bprint a warning%b \
-    when detecting console output during zsh initialization. %BChoose this if you\'ve never tried \
-    instant prompt, haven\'t seen the warning, or if you are unsure what this all means%b.
+  add_widget 0 flowing +c -i 5 "%B(3)  Off.%b" Choose this if you\'ve tried instant prompt \
+    and found it incompatible with your zsh configuration files.
   add_widget 0 print
   add_widget 2
   add_widget 0 print -P "(r)  Restart from the beginning."
   ask 123r
   case $choice in
     r) return 1;;
-    1) instant_prompt=off; options+=instant_prompt=off;;
+    1) instant_prompt=verbose; options+=instant_prompt=verbose;;
     2) instant_prompt=quiet; options+=instant_prompt=quiet;;
-    3) instant_prompt=verbose; options+=instant_prompt=verbose;;
+    3) instant_prompt=off; options+=instant_prompt=off;;
   esac
   return 0
 }
@@ -1551,7 +1588,9 @@ function ask_zshrc_edit() {
     local h7='$ZDOTDIR/.p10k.zsh'
     local h8='"$ZDOTDIR/.p10k.zsh"'
     local h9='"$ZDOTDIR"/.p10k.zsh'
-    if [[ -n ${(@M)lines:#(#b)[^#]#([^[:IDENT:]]|)source[[:space:]]##($f1|$f2|$f3|$f4|$g1|$h0|$h1|$h2|$h3|$h4|$h5|$h6|$h7|$h8|$h9)(|[[:space:]]*|'#'*)} ]]; then
+    local h10='$POWERLEVEL9K_CONFIG_FILE'
+    local h11='"$POWERLEVEL9K_CONFIG_FILE"'
+    if [[ -n ${(@M)lines:#(#b)[^#]#([^[:IDENT:]]|)source[[:space:]]##($f1|$f2|$f3|$f4|$g1|$h0|$h1|$h2|$h3|$h4|$h5|$h6|$h7|$h8|$h9|$h10|$h11)(|[[:space:]]*|'#'*)} ]]; then
       zshrc_has_cfg=1
     fi
     local pre='${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh'
@@ -1565,7 +1604,11 @@ function ask_zshrc_edit() {
   add_widget 0 print -P ""
   add_widget 1
   local modifiable=y
-  if [[ -e $__p9k_zshrc && ! -w $__p9k_zshrc ]]; then
+  if [[ ! -w $__p9k_zd ]]; then
+    modifiable=
+    add_widget 0 flowing -c %3FWARNING:%f %2F${__p9k_zd_u//\\/\\\\}%f %3Fis readonly.%f
+    add_widget 0 print -P ""
+  elif [[ -e $__p9k_zshrc && ! -w $__p9k_zshrc ]]; then
     local -a stat
     zstat -A stat +uid -- $__p9k_zshrc || quit -c
     if (( stat[1] == EUID )); then
@@ -1850,6 +1893,8 @@ function generate_config() {
   header+=$line
   header+=$'.\n# Type `p10k configure` to generate another config.\n#'
 
+  command mkdir -p -- ${__p9k_cfg_path:h} || return
+
   if [[ -e $__p9k_cfg_path ]]; then
     unlink $__p9k_cfg_path || return
   fi
@@ -1889,7 +1934,7 @@ fi" || return
 [[ ! -f ${(%)__p9k_cfg_path_u} ]] || source ${(%)__p9k_cfg_path_u}" || return
     fi
     (( writable )) || chmod u-w -- $tmp || return
-    zf_mv -f -- $tmp $__p9k_zshrc || return
+    command mv -f -- $tmp $__p9k_zshrc || return
   } always {
     zf_rm -f -- $tmp
   }
@@ -2041,22 +2086,27 @@ while true; do
 done
 
 restore_screen
-print
 
-flowing +c New config: "%B${__p9k_cfg_path_u//\\/\\\\}%b."
-if [[ -n $config_backup ]]; then
-  flowing +c Backup of the old config: "%B${config_backup_u//\\/\\\\}%b."
-fi
-if [[ -n $zshrc_backup ]]; then
-  flowing +c Backup of "%B${__p9k_zshrc_u//\\/\\\\}%b:" "%B${zshrc_backup_u//\\/\\\\}%b."
+if (( !in_z4h_wizard )); then
+  print
+
+  flowing +c New config: "%B${__p9k_cfg_path_u//\\/\\\\}%b."
+  if [[ -n $config_backup ]]; then
+    flowing +c Backup of the old config: "%B${config_backup_u//\\/\\\\}%b."
+  fi
+  if [[ -n $zshrc_backup ]]; then
+    flowing +c Backup of "%B${__p9k_zshrc_u//\\/\\\\}%b:" "%B${zshrc_backup_u//\\/\\\\}%b."
+  fi
 fi
 
 generate_config || return
 change_zshrc    || return
 
-print -rP ""
-flowing +c File feature requests and bug reports at "$(href https://github.com/romkatv/powerlevel10k/issues)"
-print -rP ""
+if (( !in_z4h_wizard )); then
+  print -rP ""
+  flowing +c File feature requests and bug reports at "$(href https://github.com/romkatv/powerlevel10k/issues)"
+  print -rP ""
+fi
 
 success=1
 

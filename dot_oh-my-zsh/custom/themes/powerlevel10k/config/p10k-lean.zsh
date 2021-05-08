@@ -66,6 +66,7 @@
     jenv                    # java version from jenv (https://github.com/jenv/jenv)
     plenv                   # perl version from plenv (https://github.com/tokuhirom/plenv)
     phpenv                  # php version from phpenv (https://github.com/phpenv/phpenv)
+    scalaenv                # scala version from scalaenv (https://github.com/scalaenv/scalaenv)
     haskell_stack           # haskell version from stack (https://haskellstack.org/)
     kubecontext             # current kubernetes context (https://kubernetes.io/)
     terraform               # terraform workspace (https://www.terraform.io)
@@ -173,8 +174,8 @@
   #################################[ os_icon: os identifier ]##################################
   # OS identifier color.
   typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=
-  # Make the icon bold.
-  typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='${P9K_CONTENT}'
+  # Custom icon.
+  # typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='⭐'
 
   ################################[ prompt_char: prompt symbol ]################################
   # Green prompt symbol if the last command succeeded.
@@ -267,12 +268,12 @@
   # the full directory that was used in previous commands.
   typeset -g POWERLEVEL9K_DIR_HYPERLINK=false
 
-  # Enable special styling for non-writable directories. See POWERLEVEL9K_LOCK_ICON and
-  # POWERLEVEL9K_DIR_CLASSES below.
-  typeset -g POWERLEVEL9K_DIR_SHOW_WRITABLE=v2
+  # Enable special styling for non-writable and non-existent directories. See POWERLEVEL9K_LOCK_ICON
+  # and POWERLEVEL9K_DIR_CLASSES below.
+  typeset -g POWERLEVEL9K_DIR_SHOW_WRITABLE=v3
 
-  # The default icon shown next to non-writable directories when POWERLEVEL9K_DIR_SHOW_WRITABLE is
-  # set to v2.
+  # The default icon shown next to non-writable and non-existent directories when
+  # POWERLEVEL9K_DIR_SHOW_WRITABLE is set to v3.
   # typeset -g POWERLEVEL9K_LOCK_ICON='⭐'
 
   # POWERLEVEL9K_DIR_CLASSES allows you to specify custom icons and colors for different
@@ -285,8 +286,8 @@
   #
   # Triplets are tried in order. The first triplet whose pattern matches $PWD wins.
   #
-  # If POWERLEVEL9K_DIR_SHOW_WRITABLE is set to v2 and the current directory is not writable,
-  # its class gets suffix _NOT_WRITABLE.
+  # If POWERLEVEL9K_DIR_SHOW_WRITABLE is set to v3, non-writable and non-existent directories
+  # acquire class suffix _NOT_WRITABLE and NON_EXISTENT respectively.
   #
   # For example, given these settings:
   #
@@ -295,10 +296,11 @@
   #     '~(|/*)'       HOME     ''
   #     '*'            DEFAULT  '')
   #
-  # Whenever the current directory is ~/work or a subdirectory of ~/work, it gets styled with class
-  # WORK or WORK_NOT_WRITABLE.
+  # Whenever the current directory is ~/work or a subdirectory of ~/work, it gets styled with one
+  # of the following classes depending on its writability and existence: WORK, WORK_NOT_WRITABLE or
+  # WORK_NON_EXISTENT.
   #
-  # Simply assigning classes to directories don't have any visible effects. It merely gives you an
+  # Simply assigning classes to directories doesn't have any visible effects. It merely gives you an
   # option to define custom colors and icons for different directory classes.
   #
   #   # Styling for WORK.
@@ -312,6 +314,12 @@
   #   typeset -g POWERLEVEL9K_DIR_WORK_NOT_WRITABLE_FOREGROUND=31
   #   typeset -g POWERLEVEL9K_DIR_WORK_NOT_WRITABLE_SHORTENED_FOREGROUND=103
   #   typeset -g POWERLEVEL9K_DIR_WORK_NOT_WRITABLE_ANCHOR_FOREGROUND=39
+  #
+  #   # Styling for WORK_NON_EXISTENT.
+  #   typeset -g POWERLEVEL9K_DIR_WORK_NON_EXISTENT_VISUAL_IDENTIFIER_EXPANSION='⭐'
+  #   typeset -g POWERLEVEL9K_DIR_WORK_NON_EXISTENT_FOREGROUND=31
+  #   typeset -g POWERLEVEL9K_DIR_WORK_NON_EXISTENT_SHORTENED_FOREGROUND=103
+  #   typeset -g POWERLEVEL9K_DIR_WORK_NON_EXISTENT_ANCHOR_FOREGROUND=39
   #
   # If a styling parameter isn't explicitly defined for some class, it falls back to the classless
   # parameter. For example, if POWERLEVEL9K_DIR_WORK_NOT_WRITABLE_FOREGROUND is not set, it falls
@@ -365,28 +373,37 @@
     fi
 
     local res
-    local where  # branch or tag
+
     if [[ -n $VCS_STATUS_LOCAL_BRANCH ]]; then
-      res+="${clean}${(g::)POWERLEVEL9K_VCS_BRANCH_ICON}"
-      where=${(V)VCS_STATUS_LOCAL_BRANCH}
-    elif [[ -n $VCS_STATUS_TAG ]]; then
-      res+="${meta}#"
-      where=${(V)VCS_STATUS_TAG}
+      local branch=${(V)VCS_STATUS_LOCAL_BRANCH}
+      # If local branch name is at most 32 characters long, show it in full.
+      # Otherwise show the first 12 … the last 12.
+      # Tip: To always show local branch name in full without truncation, delete the next line.
+      (( $#branch > 32 )) && branch[13,-13]="…"  # <-- this line
+      res+="${clean}${(g::)POWERLEVEL9K_VCS_BRANCH_ICON}${branch//\%/%%}"
     fi
 
-    # If local branch name or tag is at most 32 characters long, show it in full.
-    # Otherwise show the first 12 … the last 12.
-    # Tip: To always show local branch name in full without truncation, delete the next line.
-    (( $#where > 32 )) && where[13,-13]="…"
-    res+="${clean}${where//\%/%%}"  # escape %
+    if [[ -n $VCS_STATUS_TAG
+          # Show tag only if not on a branch.
+          # Tip: To always show tag, delete the next line.
+          && -z $VCS_STATUS_LOCAL_BRANCH  # <-- this line
+        ]]; then
+      local tag=${(V)VCS_STATUS_TAG}
+      # If tag name is at most 32 characters long, show it in full.
+      # Otherwise show the first 12 … the last 12.
+      # Tip: To always show tag name in full without truncation, delete the next line.
+      (( $#tag > 32 )) && tag[13,-13]="…"  # <-- this line
+      res+="${meta}#${clean}${tag//\%/%%}"
+    fi
 
-    # Display the current Git commit if there is no branch or tag.
-    # Tip: To always display the current Git commit, remove `[[ -z $where ]] &&` from the next line.
-    [[ -z $where ]] && res+="${meta}@${clean}${VCS_STATUS_COMMIT[1,8]}"
+    # Display the current Git commit if there is no branch and no tag.
+    # Tip: To always display the current Git commit, delete the next line.
+    [[ -z $VCS_STATUS_LOCAL_BRANCH && -z $VCS_STATUS_TAG ]] &&  # <-- this line
+      res+="${meta}@${clean}${VCS_STATUS_COMMIT[1,8]}"
 
     # Show tracking branch name if it differs from local branch.
     if [[ -n ${VCS_STATUS_REMOTE_BRANCH:#$VCS_STATUS_LOCAL_BRANCH} ]]; then
-      res+="${meta}:${clean}${(V)VCS_STATUS_REMOTE_BRANCH//\%/%%}"  # escape %
+      res+="${meta}:${clean}${(V)VCS_STATUS_REMOTE_BRANCH//\%/%%}"
     fi
 
     # ⇣42 if behind the remote.
@@ -577,7 +594,7 @@
   typeset -g POWERLEVEL9K_ASDF_SHOW_SYSTEM=true
 
   # If set to non-empty value, hide tools unless there is a file matching the specified file pattern
-  # in the current directory, or its parent diretory, or its grandparent directory, and so on.
+  # in the current directory, or its parent directory, or its grandparent directory, and so on.
   #
   # Note: If this parameter is set to empty value, it won't hide tools.
   # Note: SHOW_ON_UPGLOB isn't specific to asdf. It works with all prompt segments.
@@ -788,7 +805,7 @@
   ##############[ taskwarrior: taskwarrior task count (https://taskwarrior.org/) ]##############
   # Taskwarrior color.
   typeset -g POWERLEVEL9K_TASKWARRIOR_FOREGROUND=74
-  
+
   # Taskwarrior segment format. The following parameters are available within the expansion.
   #
   # - P9K_TASKWARRIOR_PENDING_COUNT   The number of pending tasks: `task +PENDING count`.
@@ -834,7 +851,8 @@
   typeset -g POWERLEVEL9K_VIRTUALENV_FOREGROUND=37
   # Don't show Python version next to the virtual environment name.
   typeset -g POWERLEVEL9K_VIRTUALENV_SHOW_PYTHON_VERSION=false
-  # Don't show virtualenv if pyenv is already shown.
+  # If set to "false", won't show virtualenv if pyenv is already shown.
+  # If set to "if-different", won't show virtualenv if it's the same as pyenv.
   typeset -g POWERLEVEL9K_VIRTUALENV_SHOW_WITH_PYENV=false
   # Separate environment name from Python version only with a space.
   typeset -g POWERLEVEL9K_VIRTUALENV_{LEFT,RIGHT}_DELIMITER=
@@ -1091,6 +1109,19 @@
   # Custom icon.
   # typeset -g POWERLEVEL9K_PHPENV_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
+  #######[ scalaenv: scala version from scalaenv (https://github.com/scalaenv/scalaenv) ]#######
+  # Scala color.
+  typeset -g POWERLEVEL9K_SCALAENV_FOREGROUND=160
+  # Hide scala version if it doesn't come from one of these sources.
+  typeset -g POWERLEVEL9K_SCALAENV_SOURCES=(shell local global)
+  # If set to false, hide scala version if it's the same as global:
+  # $(scalaenv version-name) == $(scalaenv global).
+  typeset -g POWERLEVEL9K_SCALAENV_PROMPT_ALWAYS_SHOW=false
+  # If set to false, hide scala version if it's equal to "system".
+  typeset -g POWERLEVEL9K_SCALAENV_SHOW_SYSTEM=true
+  # Custom icon.
+  # typeset -g POWERLEVEL9K_SCALAENV_VISUAL_IDENTIFIER_EXPANSION='⭐'
+
   ##########[ haskell_stack: haskell version from stack (https://haskellstack.org/) ]###########
   # Haskell color.
   typeset -g POWERLEVEL9K_HASKELL_STACK_FOREGROUND=172
@@ -1108,7 +1139,7 @@
   #############[ kubecontext: current kubernetes context (https://kubernetes.io/) ]#############
   # Show kubecontext only when the the command you are typing invokes one of these tools.
   # Tip: Remove the next line to always show kubecontext.
-  typeset -g POWERLEVEL9K_KUBECONTEXT_SHOW_ON_COMMAND='kubectl|helm|kubens|kubectx|oc|istioctl|kogito'
+  typeset -g POWERLEVEL9K_KUBECONTEXT_SHOW_ON_COMMAND='kubectl|helm|kubens|kubectx|oc|istioctl|kogito|k9s|helmfile|fluxctl|stern'
 
   # Kubernetes context classes for the purpose of using different colors, icons and expansions with
   # different contexts.
@@ -1228,7 +1259,7 @@
   #[ aws: aws profile (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) ]#
   # Show aws only when the the command you are typing invokes one of these tools.
   # Tip: Remove the next line to always show aws.
-  typeset -g POWERLEVEL9K_AWS_SHOW_ON_COMMAND='aws|awless|terraform|pulumi'
+  typeset -g POWERLEVEL9K_AWS_SHOW_ON_COMMAND='aws|awless|terraform|pulumi|terragrunt'
 
   # POWERLEVEL9K_AWS_CLASSES is an array with even number of elements. The first element
   # in each pair defines a pattern against which the current AWS profile gets matched.
@@ -1269,7 +1300,7 @@
   ##########[ azure: azure account name (https://docs.microsoft.com/en-us/cli/azure) ]##########
   # Show azure only when the the command you are typing invokes one of these tools.
   # Tip: Remove the next line to always show azure.
-  typeset -g POWERLEVEL9K_AZURE_SHOW_ON_COMMAND='az|terraform|pulumi'
+  typeset -g POWERLEVEL9K_AZURE_SHOW_ON_COMMAND='az|terraform|pulumi|terragrunt'
   # Azure account name color.
   typeset -g POWERLEVEL9K_AZURE_FOREGROUND=32
   # Custom icon.
@@ -1294,7 +1325,7 @@
   #   P9K_GCLOUD_PROJECT_ID    | gcloud config get-value project
   #   P9K_GCLOUD_PROJECT_NAME  | gcloud projects describe $P9K_GCLOUD_PROJECT_ID --format='value(name)'
   #
-  # Note: ${VARIABLE//\%/%%} expands to ${VARIABLE} with all occurences of '%' replaced with '%%'.
+  # Note: ${VARIABLE//\%/%%} expands to ${VARIABLE} with all occurrences of '%' replaced with '%%'.
   #
   # Obtaining project name requires sending a request to Google servers. This can take a long time
   # and even fail. When project name is unknown, P9K_GCLOUD_PROJECT_NAME is not set and gcloud
@@ -1319,7 +1350,7 @@
   #[ google_app_cred: google application credentials (https://cloud.google.com/docs/authentication/production) ]#
   # Show google_app_cred only when the the command you are typing invokes one of these tools.
   # Tip: Remove the next line to always show google_app_cred.
-  typeset -g POWERLEVEL9K_GOOGLE_APP_CRED_SHOW_ON_COMMAND='terraform|pulumi'
+  typeset -g POWERLEVEL9K_GOOGLE_APP_CRED_SHOW_ON_COMMAND='terraform|pulumi|terragrunt'
 
   # Google application credentials classes for the purpose of using different colors, icons and
   # expansions with different credentials.
@@ -1367,7 +1398,7 @@
   #   P9K_GOOGLE_APP_CRED_PROJECT_ID   | project_id
   #   P9K_GOOGLE_APP_CRED_CLIENT_EMAIL | client_email
   #
-  # Note: ${VARIABLE//\%/%%} expands to ${VARIABLE} with all occurences of '%' replaced by '%%'.
+  # Note: ${VARIABLE//\%/%%} expands to ${VARIABLE} with all occurrences of '%' replaced by '%%'.
   typeset -g POWERLEVEL9K_GOOGLE_APP_CRED_DEFAULT_CONTENT_EXPANSION='${P9K_GOOGLE_APP_CRED_PROJECT_ID//\%/%%}'
 
   ###############################[ public_ip: public IP address ]###############################
@@ -1384,7 +1415,7 @@
   typeset -g POWERLEVEL9K_VPN_IP_CONTENT_EXPANSION=
   # Regular expression for the VPN network interface. Run `ifconfig` or `ip -4 a show` while on VPN
   # to see the name of the interface.
-  typeset -g POWERLEVEL9K_VPN_IP_INTERFACE='(wg|(.*tun))[0-9]*'
+  typeset -g POWERLEVEL9K_VPN_IP_INTERFACE='(gpd|wg|(.*tun)|tailscale)[0-9]*'
   # If set to true, show one segment per matching network interface. If set to false, show only
   # one segment corresponding to the first matching network interface.
   # Tip: If you set it to true, you'll probably want to unset POWERLEVEL9K_VPN_IP_CONTENT_EXPANSION.
@@ -1408,7 +1439,7 @@
   typeset -g POWERLEVEL9K_IP_CONTENT_EXPANSION='$P9K_IP_IP${P9K_IP_RX_RATE:+ %70F⇣$P9K_IP_RX_RATE}${P9K_IP_TX_RATE:+ %215F⇡$P9K_IP_TX_RATE}'
   # Show information for the first network interface whose name matches this regular expression.
   # Run `ifconfig` or `ip -4 a show` to see the names of all network interfaces.
-  typeset -g POWERLEVEL9K_IP_INTERFACE='e.*'
+  typeset -g POWERLEVEL9K_IP_INTERFACE='[ew].*'
   # Custom icon.
   # typeset -g POWERLEVEL9K_IP_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
@@ -1451,15 +1482,11 @@
   #   Parameter             | Meaning
   #   ----------------------+---------------
   #   P9K_WIFI_SSID         | service set identifier, a.k.a. network name
-  #   P9K_WIFI_LINK_AUTH    | authentication protocol such as "wpa2-psk" or "none"
+  #   P9K_WIFI_LINK_AUTH    | authentication protocol such as "wpa2-psk" or "none"; empty if unknown
   #   P9K_WIFI_LAST_TX_RATE | wireless transmit rate in megabits per second
   #   P9K_WIFI_RSSI         | signal strength in dBm, from -120 to 0
   #   P9K_WIFI_NOISE        | noise in dBm, from -120 to 0
   #   P9K_WIFI_BARS         | signal strength in bars, from 0 to 4 (derived from P9K_WIFI_RSSI and P9K_WIFI_NOISE)
-  #
-  # All parameters except P9K_WIFI_BARS are extracted from the output of the following command:
-  #
-  #   /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I
 
   ####################################[ time: current time ]####################################
   # Current time color.

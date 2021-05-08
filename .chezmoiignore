@@ -16,7 +16,7 @@ update-imports.sh
 .config/windows_terminal/
 
 # Ignore on WSL
-{{- if .chezmoi.kernel.osrelease | regexMatch "-microsoft-standard$" }}
+{{- if .is_wsl }}
 wallpapers/
 .fonts/
 {{- end }}
