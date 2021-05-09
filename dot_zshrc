@@ -109,7 +109,22 @@ source $ZSH/oh-my-zsh.sh
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 ## Custom below
+[[ ! -f ~/.alias_custom ]] || source ~/.alias_custom
 
-source ~/.bash_aliases
+# Misc
+alias rm='rm -i'
+
+# Git
+alias gs='git status'
+alias gc='git commit -m'
+alias ga='git add -A'
+alias gp='git push'
+
+# Docker
+alias dc='docker-compose'
+
+# Kubernetes
+alias k='kubectl'
+
 export PATH=$PATH:/usr/local/go/bin
 zle_highlight+=(paste:none)
