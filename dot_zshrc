@@ -127,5 +127,5 @@ alias dc='docker-compose'
 # Kubernetes
 alias k='kubectl'
 
-export PATH=$PATH:/usr/local/go/bin
+export PATH=$PATH:/usr/local/go/bin:~/.local/bin
 zle_highlight+=(paste:none)
