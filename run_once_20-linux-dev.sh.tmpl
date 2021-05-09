@@ -3,6 +3,7 @@
 set -e
 
 GO_VERSION=1.16.4
+K9S_VERSION=0.24.9
 
 mkdir -p ~/Projects
 
@@ -44,6 +45,10 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip -o awscliv2.zip
 sudo ./aws/install --update
 rm -rf aws/ awscliv2.zip
+
+# K9S
+curl -sL "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_$(uname -s)_$(uname -m).tar.gz" | tar xz -C /tmp
+sudo mv /tmp/k9s /usr/local/bin
 
 {{- end }}
 
