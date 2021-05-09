@@ -46,6 +46,10 @@ unzip -o awscliv2.zip
 sudo ./aws/install --update
 rm -rf aws/ awscliv2.zip
 
+# Install kubectl
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
 # K9S
 curl -sL "https://github.com/derailed/k9s/releases/download/v${K9S_VERSION}/k9s_$(uname -s)_$(uname -m).tar.gz" | tar xz -C /tmp
 sudo mv /tmp/k9s /usr/local/bin
