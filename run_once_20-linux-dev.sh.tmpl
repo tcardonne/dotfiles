@@ -5,10 +5,14 @@ set -e
 GO_VERSION=1.16.4
 K9S_VERSION=0.24.9
 
+# Create directory for projects ('work' alias will cd into it)
 mkdir -p ~/Projects
 
-# Install ZSH
-sudo apt install -y zsh neofetch
+# Install ZSH and common
+sudo apt install -y \
+    zsh \
+    neofetch \
+    jq
 sudo chsh -s $(which zsh) $(whoami)
 
 # Install Golang

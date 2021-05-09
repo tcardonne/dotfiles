@@ -112,6 +112,7 @@ source $ZSH/oh-my-zsh.sh
 [[ ! -f ~/.alias_custom ]] || source ~/.alias_custom
 
 # Misc
+alias work='cd ~/Projects'
 alias rm='rm -i'
 
 # Git
