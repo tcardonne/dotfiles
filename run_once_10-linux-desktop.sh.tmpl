@@ -13,15 +13,15 @@ sudo apt-get install -y \
 
 # Dash-To-Panel
 mkdir -p ~/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com
-wget -q https://github.com/home-sweet-gnome/dash-to-panel/releases/download/v38/dash-to-panel@jderose9.github.com_v38.zip  
-unzip -o -d ~/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/ dash-to-panel@jderose9.github.com_v38.zip 
-rm -f dash-to-panel@jderose9.github.com_v38.zip
+wget -q https://github.com/home-sweet-gnome/dash-to-panel/releases/download/v42/dash-to-panel@jderose9.github.com_v42.zip
+unzip -o -d ~/.local/share/gnome-shell/extensions/dash-to-panel@jderose9.github.com/ dash-to-panel@jderose9.github.com_v42.zip 
+rm -f dash-to-panel@jderose9.github.com_v42.zip
 
 # Sound Output Device Chooser
 mkdir -p ~/.local/share/gnome-shell/extensions/sound-output-device-chooser@kgshank.net
-wget -q https://extensions.gnome.org/extension-data/sound-output-device-chooserkgshank.net.v31.shell-extension.zip  
-unzip -o -d ~/.local/share/gnome-shell/extensions/sound-output-device-chooser@kgshank.net/ sound-output-device-chooserkgshank.net.v31.shell-extension.zip
-rm -f sound-output-device-chooserkgshank.net.v31.shell-extension.zip  
+wget -q https://extensions.gnome.org/extension-data/sound-output-device-chooserkgshank.net.v38.shell-extension.zip  
+unzip -o -d ~/.local/share/gnome-shell/extensions/sound-output-device-chooser@kgshank.net/ sound-output-device-chooserkgshank.net.v38.shell-extension.zip
+rm -f sound-output-device-chooserkgshank.net.v38.shell-extension.zip
 
 ## google-chrome-stable repository
 sudo sh -c 'echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
