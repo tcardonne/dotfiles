@@ -79,6 +79,7 @@
     nordvpn                 # nordvpn connection status, linux only (https://nordvpn.com/)
     ranger                  # ranger shell (https://github.com/ranger/ranger)
     nnn                     # nnn shell (https://github.com/jarun/nnn)
+    xplr                    # xplr shell (https://github.com/sayanarijit/xplr)
     vim_shell               # vim shell indicator (:sh)
     midnight_commander      # midnight commander shell (https://midnight-commander.org/)
     nix_shell               # nix shell (https://nixos.org/nixos/nix-pills/developing-with-nix-shell.html)
@@ -712,6 +713,12 @@
   typeset -g POWERLEVEL9K_NNN_FOREGROUND=72
   # Custom icon.
   # typeset -g POWERLEVEL9K_NNN_VISUAL_IDENTIFIER_EXPANSION='⭐'
+
+  ##################[ xplr: xplr shell (https://github.com/sayanarijit/xplr) ]##################
+  # xplr shell color.
+  typeset -g POWERLEVEL9K_XPLR_FOREGROUND=72
+  # Custom icon.
+  # typeset -g POWERLEVEL9K_XPLR_VISUAL_IDENTIFIER_EXPANSION='⭐'
 
   ###########################[ vim_shell: vim shell indicator (:sh) ]###########################
   # Vim shell indicator color.
@@ -1452,13 +1459,15 @@
   # The following parameters are accessible within the expansion:
   #
   #   Parameter             | Meaning
-  #   ----------------------+---------------
-  #   P9K_IP_IP         | IP address
-  #   P9K_IP_INTERFACE  | network interface
-  #   P9K_IP_RX_BYTES   | total number of bytes received
-  #   P9K_IP_TX_BYTES   | total number of bytes sent
-  #   P9K_IP_RX_RATE    | receive rate (since last prompt)
-  #   P9K_IP_TX_RATE    | send rate (since last prompt)
+  #   ----------------------+-------------------------------------------
+  #   P9K_IP_IP             | IP address
+  #   P9K_IP_INTERFACE      | network interface
+  #   P9K_IP_RX_BYTES       | total number of bytes received
+  #   P9K_IP_TX_BYTES       | total number of bytes sent
+  #   P9K_IP_RX_BYTES_DELTA | number of bytes received since last prompt
+  #   P9K_IP_TX_BYTES_DELTA | number of bytes sent since last prompt
+  #   P9K_IP_RX_RATE        | receive rate (since last prompt)
+  #   P9K_IP_TX_RATE        | send rate (since last prompt)
   typeset -g POWERLEVEL9K_IP_CONTENT_EXPANSION='${P9K_IP_RX_RATE:+%70F⇣$P9K_IP_RX_RATE }${P9K_IP_TX_RATE:+%215F⇡$P9K_IP_TX_RATE }%38F$P9K_IP_IP'
   # Show information for the first network interface whose name matches this regular expression.
   # Run `ifconfig` or `ip -4 a show` to see the names of all network interfaces.
